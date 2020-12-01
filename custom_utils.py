@@ -207,7 +207,9 @@ def calc_img_stats(img_tif):
     return stats
 
 
-def register_image2(target_img, reference_img, no_data_val=0.0, coreg_method='local', outdir=None):
+def register_image2(target_img, reference_img, no_data_val=0.0, 
+        coreg_method='local', outdir=None, 
+        cpus_reg=None):
     """
     Using AROSICS, perform co-registration. Generates and saves a CSV of the tie-points and their shift vectors.
     Also creates a visualization of how the co-registered image has shifted.
@@ -215,6 +217,7 @@ def register_image2(target_img, reference_img, no_data_val=0.0, coreg_method='lo
     :param reference_img: image with target geospatial referencing
     :param no_data_val: (float) no-data value for the target and reference images
     :param coreg_method: (str) which coregistration method to use in AROSICS. Options are 'local' (default) and 'global'
+    :param cpus_reg: (None or int) number CPUs to use
     :return warped_out: filepath of coregistered version of target_image
     """
     import arosics
@@ -235,7 +238,8 @@ def register_image2(target_img, reference_img, no_data_val=0.0, coreg_method='lo
     registered_img = arosics.COREG_LOCAL(reference_img, target_img, 300, path_out=warped_out,
                                          nodata=(no_data_val, no_data_val), fmt_out="GTiff",
                                          projectDir=outdir, r_b4match=4, s_b4match=4,
-                                         calc_corners=False, align_grids=False)
+                                         calc_corners=False, align_grids=False, 
+                                         CPUs=cpus_reg)
     coreg_csv_name = os.path.split(target_img)[1][:-4] + "_coreg_points.csv"
     try:
         tie_points = registered_img.CoRegPoints_table
@@ -718,7 +722,7 @@ def projection_match(image_1, image_2, outdir=None):
         return os.path.join(dir_target, image2_reprojected)
 
 
-def main(image_ref, image_reg_ref, image_targ, allow_reg=False, view_radcal_fits=True, dst_nodataval=0.0,
+def main(image_ref, image_reg_ref, image_targ, allow_reg=False, cpus_reg=None, view_radcal_fits=True, dst_nodataval=0.0,
          udm=None, ndvi_thresh=0.0, nochange_thresh=0.95, outdir=None,
          datatype_out=gdal.GDT_UInt16, is_ps=True):
     """
@@ -728,6 +732,7 @@ def main(image_ref, image_reg_ref, image_targ, allow_reg=False, view_radcal_fits
     :param image_reg_ref: (str) filepath of geolocation reference image
     :param image_targ: (str) filepath of target image
     :param allow_reg: (bool) whether the target image needs registration
+    :param cpus_reg: (None or int) number CPUs to use for image registration 
     :param view_radcal_fits: (bool) whether the radcal fits should be displayed
     :param dst_nodataval: (float) no-data value to be applied to the output images
     :param udm: (list, tuple, or string) filepath of Unusable Data Mask(s) which will be applied to the final image
@@ -826,7 +831,8 @@ def main(image_ref, image_reg_ref, image_targ, allow_reg=False, view_radcal_fits
 
     # Step 2: align the Planet image to that snip (if permitted).
     if allow_reg:
-        image2_aligned = register_image2(image_targ, trim_out[2], outdir=outdir)
+        image2_aligned = register_image2(image_targ, trim_out[2], outdir=outdir,
+                cpus_reg=cpus_reg)
         # out is a full-resolution image. 2nd arg is cropped reference image.
     else:
         image2_aligned = image_targ  # keep in mind that this has a path attached

@@ -180,7 +180,7 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
         print('correlation:        ', R)
         print('means(tgt,ref,nrm): ', mean_tgt, mean_ref, mean_nrm)
         print('t-test, p-value:    ', t_test)
-        print('vars(tgt,ref,nrm)   ', var_tgt, var_ref, var_nrm)
+        print('vars(tgt,ref,nrm):  ', var_tgt, var_ref, var_nrm)
         print('F-test, p-value:    ', F_test)
         aa.append(a)
         bb.append(b)

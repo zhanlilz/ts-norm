@@ -158,9 +158,9 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
     log = []
     residuals = []  # list to save residuals
     predicted = []  # list to save predicted values at the invariant pixels
-    for k in pos1:
+    for k, k2 in zip(pos2, pos1):
         x = inDataset1.GetRasterBand(k).ReadAsArray(x10,y10,cols,rows).astype(float).ravel()  # x=reference image
-        y = inDataset2.GetRasterBand(k).ReadAsArray(x20,y20,cols,rows).astype(float).ravel()  # y=target image
+        y = inDataset2.GetRasterBand(k2).ReadAsArray(x20,y20,cols,rows).astype(float).ravel()  # y=target image
         b, a, R = orthoregress(y[trn], x[trn])  # trn is the vector of training points
         mean_tgt, mean_ref, mean_nrm = np.mean(y[tst]), np.mean(x[tst]), np.mean(a+b*y[tst])
         t_test = stats.ttest_rel(x[tst], a+b*y[tst])

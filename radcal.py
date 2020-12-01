@@ -205,10 +205,9 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
 
     # NL - save an image showing the invariant pixels
     if save_invariant:
-        if img1_name.endswith("downsample.tif"):
-            invar_name = os.path.join(dir_target, img1_name[:-14] + "invariants.tif")
-        else:
-            invar_name = os.path.join(dir_target, img1_name[:-4] + "invariants.tif")
+        invar_name = os.path.join(dir_target, 
+                (os.path.splitext(os.path.basename(img1_name))[0]
+                    +"_invariants.tif"))
         invariant_ds = driver.Create(invar_name, cols, rows, 1, GDT_Byte)
         if geotransform is not None:
             gt = list(geotransform)
@@ -224,30 +223,28 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
         invariant_ds.FlushCache()
 
     # write out a log with radcal fit information
-    if img1_name.endswith("downsample.tif"):
-        log_outpath = os.path.join(dir_target, img1_name[:-14] + "radcal_parameters.json")
-        # write out an array with all the predicted invariant pixel values and their residuals
-        if save_residuals:
-            resid_file_contents = predicted + residuals  # first rows are the predicted pixel values
-            np.savetxt(img1_name[:-14] + "residuals.csv", np.array(resid_file_contents), delimiter=',',
-                       header="1st half of rows are the predicted values. 2nd half are residuals.")
-    else:
-        log_outpath = os.path.join(dir_target, img1_name[:-4] + 'radcal_parameters.json')
-        # write out an array with all the residuals
-        if save_residuals:
-            resid_file_contents = predicted + residuals  # first rows are the predicted pixel values
-            np.savetxt(img1_name[:-4] + "residuals.csv", np.array(resid_file_contents), delimiter=',',
-                       header="1st half of rows are the predicted values. 2nd half are residuals.")
+    log_outpath = os.path.join(dir_target, 
+            (os.path.splitext(os.path.basename(img1_name))[0]
+                +"_radcal_parameters.json"))
     with open(log_outpath, "w") as write_file:
         json.dump(log, write_file)
-
+    
+    if save_residuals:
+        resid_outpath = os.path.join(dir_target, 
+                (os.path.splitext(os.path.basename(img1_name))[0]
+                    +"_residuals.csv"))
+        # first rows are the predicted pixel values
+        resid_file_contents = predicted + residuals  
+        np.savetxt(resid_outpath, np.array(resid_file_contents), delimiter=',', 
+                header="1st half of rows are the predicted values. 2nd half are residuals.")
+    
     outDataset = None
     print('result written to: '+outfile)
     if fsfile is not None:
         path = dir_target
         basename = os.path.basename(fsfile)
         root, ext = os.path.splitext(basename)
-        fsoutfile = path+'/'+root+'_norm'+ext        
+        fsoutfile = os.path.join(path, root+'_norm'+ext)
         print('normalizing '+fsfile+'...')
         fsDataset = gdal.Open(fsfile,GA_ReadOnly)
         cols = fsDataset.RasterXSize

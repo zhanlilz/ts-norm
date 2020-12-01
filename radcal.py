@@ -36,7 +36,7 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
     :param image1: Image which will receive radiometric calibration (target image). Include path.
     :param image2: Image with desired radiometry (reference image). Include path.
     :param outfile_name: Name for radcal image output. DO NOT INCLUDE PATH.
-    :param iMAD_img: Output image from iMAD. Include path.
+    :param iMAD_img: Output image from iMAD. DO NOT INCLUDE PATH.
     :param full_target_scene: The full-resolution, full-size image to receive radiometric corrections.
     :param band_pos1: positions of the bands to be calibrated in image 1.
     :param band_pos2: positions of the bands to be calibrated in image 2.

@@ -872,15 +872,15 @@ def main(image_ref, image_reg_ref, image_targ, allow_reg=False, cpus_reg=None, v
     with rasterio.open(downsampled_img, 'r') as src:
         downsampled_dimensions = (src.height, src.width)
     if (cropped_dimensions[0] < downsampled_dimensions[0]) or (cropped_dimensions[1] < downsampled_dimensions[1]):
-        warnings.warn("Part of the target image's spatial extent falls outside the reference image. Clipping.")
-        shapefile_name = "rad_ref_extent.shp"
-        clipped_downsampled_target_name = downsampled_img[:-4] + "_clip.tif"
-        clipped_fullres_target_name = image2_aligned[:-4] + "_clip.tif"
-        shapefile_path = make_shapefile_from_raster(cropped_img, shapefile_name, outdir=outdir)
-        downsampled_img = clip_to_shapefile(downsampled_img, shapefile_path, force_dims=cropped_dimensions,
-                                            outname=clipped_downsampled_target_name, outdir=outdir)
-        image2_aligned = clip_to_shapefile(image2_aligned, shapefile_path, force_dims=cropped_dimensions,
-                                           outname=clipped_fullres_target_name, outdir=outdir)
+        raise RuntimeError("Part of the target image's spatial extent falls outside the reference image. Clip your target image first or use a larger reference image.")
+#         shapefile_name = "rad_ref_extent.shp"
+#         clipped_downsampled_target_name = downsampled_img[:-4] + "_clip.tif"
+#         clipped_fullres_target_name = os.path.join(outdir, os.path.basename(image2_aligned)[:-4] + "_clip.tif")
+#         shapefile_path = make_shapefile_from_raster(cropped_img, shapefile_name, outdir=outdir)
+#         downsampled_img = clip_to_shapefile(downsampled_img, shapefile_path, force_dims=None,
+#                                             outname=clipped_downsampled_target_name, outdir=outdir)
+#         image2_aligned = clip_to_shapefile(image2_aligned, shapefile_path, force_dims=None,
+#                                            outname=clipped_fullres_target_name, outdir=outdir)
 
     # Step 4: generate a veg mask at target image resolution, downsample and apply, but save full res for later
     # TODO: swap this to a mask layer rather than assigning no-data values

@@ -194,8 +194,12 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
         print('F-test, p-value:    ', F_test[0], F_test[1])
         aa.append(a)
         bb.append(b)
-        fit_info = {'k':k, 'b':b, 'a':a, 'R':R, 'mean_tgt':mean_tgt, 'mean_ref':mean_ref, 'mean_nrm':mean_nrm,
-                    't_test':t_test, 'var_tgt':var_tgt, 'var_ref':var_ref, 'var_nrm':var_nrm, 'F_test':F_test}
+        fit_info = {'k':k, 'cnt_train':len(x[trn]), 'cnt_test':len(x[tst]), 
+                'b':b, 'a':a, 'R':R, 
+                'mean_tgt':mean_tgt, 'mean_ref':mean_ref, 'mean_nrm':mean_nrm,
+                't_test':t_test, 
+                'var_tgt':var_tgt, 'var_ref':var_ref, 'var_nrm':var_nrm, 
+                'F_test':F_test}
         log.append(fit_info)
         outBand = outDataset.GetRasterBand(i+1)
         outBand.WriteArray(np.resize(a+b*y, (rows,cols)), 0, 0)
@@ -212,7 +216,9 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
 
             ax = ax_arr[i, 1]
             ax.set_axis_off()
-            fig_text  = ('slope = {0:.6f}\n'.format(b) 
+            fig_text  = ('count(train,test) = ' 
+                    + '{0:d}, {1:d}\n'.format(len(x[trn]), len(x[tst])))
+            fig_text += ('slope = {0:.6f}\n'.format(b) 
                     + 'intercept = {0:.6f}\n'.format(a) 
                     + 'correlation = {0:.6f}\n'.format(R))
             fig_text += ('means_tgt = {0:.6f}\n'.format(mean_tgt) 

@@ -23,11 +23,13 @@ import numpy as np
 from scipy import stats
 from osgeo import gdal
 from osgeo.gdalconst import GA_ReadOnly, GDT_Float32, GDT_Int32, GDT_UInt16, GDT_Byte
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import json
 import math
-from scipy.special import betainc
- 
+from scipy.special import betainc 
+
 def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_pos1=(1,2,3,4), band_pos2=(1,2,3,4),
                nochange_thresh=0.95, view_plots=True, save_invariant=True, save_residuals=True,
                datatype_out=GDT_UInt16, outdir=None):
@@ -154,11 +156,19 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
         outDataset.SetProjection(projection)      
     aa = []
     bb = []  
-    i = 1
     log = []
     residuals = []  # list to save residuals
     predicted = []  # list to save predicted values at the invariant pixels
-    for k, k2 in zip(pos2, pos1):
+
+    if view_plots:
+        fig_outpath = os.path.join(dir_target, 
+            (os.path.splitext(os.path.basename(img1_name))[0]
+                +"_radcal_regression.png"))
+        n_axes = len(pos1) if len(pos1) <= 10 else 10
+        fig = plt.figure(figsize=(6, 3*n_axes))
+        ax_arr = fig.subplots(n_axes, 1)
+
+    for i, (k, k2) in enumerate(zip(pos2, pos1)):
         x = inDataset1.GetRasterBand(k).ReadAsArray(x10,y10,cols,rows).astype(float).ravel()  # x=reference image
         y = inDataset2.GetRasterBand(k2).ReadAsArray(x20,y20,cols,rows).astype(float).ravel()  # y=target image
         b, a, R = orthoregress(y[trn], x[trn])  # trn is the vector of training points
@@ -179,29 +189,49 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
         print('intercept:          ', a)
         print('correlation:        ', R)
         print('means(tgt,ref,nrm): ', mean_tgt, mean_ref, mean_nrm)
-        print('t-test, p-value:    ', t_test)
+        print('t-test, p-value:    ', t_test[0], t_test[1])
         print('vars(tgt,ref,nrm):  ', var_tgt, var_ref, var_nrm)
-        print('F-test, p-value:    ', F_test)
+        print('F-test, p-value:    ', F_test[0], F_test[1])
         aa.append(a)
         bb.append(b)
         fit_info = {'k':k, 'b':b, 'a':a, 'R':R, 'mean_tgt':mean_tgt, 'mean_ref':mean_ref, 'mean_nrm':mean_nrm,
                     't_test':t_test, 'var_tgt':var_tgt, 'var_ref':var_ref, 'var_nrm':var_nrm, 'F_test':F_test}
         log.append(fit_info)
-        outBand = outDataset.GetRasterBand(i)
+        outBand = outDataset.GetRasterBand(i+1)
         outBand.WriteArray(np.resize(a+b*y, (rows,cols)), 0, 0)
         outBand.FlushCache()
-        if i <= 10:
-            if view_plots:
-                plt.figure(i)
-                ymax = max(y[idx])
-                xmax = max(x[idx])
-                plt.plot(y[idx],x[idx],'k.',[0,ymax],[a,a+b*ymax],'k-')
-                plt.axis([0,ymax,0,xmax])
-                plt.title('Band '+str(k))
-                plt.xlabel('Target')
-                plt.ylabel('Reference')
-                plt.show()
-        i += 1
+        if i < 10 and view_plots:
+            ax = ax_arr[i] 
+            ymax = max(y[idx])
+            xmax = max(x[idx])
+            ax.plot(y[idx],x[idx],'k.',[0,ymax],[a,a+b*ymax],'k-')
+            ax.axis([0,ymax,0,xmax])
+            ax.set_title('Band '+str(k))
+            ax.set_xlabel('Target')
+            ax.set_ylabel('Reference')
+            fig_text  = ('slope,int.,corr.:   ' 
+                    + '{0:.6f}, '.format(b) 
+                    + '{0:.6f}, '.format(a) 
+                    + '{0:.6f}, '.format(R) + '\n')
+            fig_text += ('means(tgt,ref,nrm): ' 
+                    + '{0:.6f}, '.format(mean_tgt) 
+                    + '{0:.6f}, '.format(mean_ref) 
+                    + '{0:.6f}, '.format(mean_nrm) + '\n')
+            fig_text += ('t-test, p-value:    ' 
+                    + '{0:.6f}, '.format(t_test[0]) 
+                    + '{0:.6f}, '.format(t_test[1]) + '\n')
+            fig_text += ('vars(tgt,ref,nrm):  ' 
+                    + '{0:.6f}, '.format(var_tgt) 
+                    + '{0:.6f}, '.format(var_ref) 
+                    + '{0:.6f}, '.format(var_nrm) + '\n')
+            fig_text += ('F-test, p-value:    ' 
+                    + '{0:.6f}, '.format(F_test[0]) 
+                    + '{0:.6f}, '.format(F_test[1]))
+            ax.text(1.05, 0.95, fig_text, va='top', transform=ax.transAxes)
+
+    if view_plots:
+        fig.tight_layout()
+        fig.savefig(fig_outpath, bbox_inches='tight', pad_inches=0.)
 
     # NL - save an image showing the invariant pixels
     if save_invariant:

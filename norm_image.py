@@ -198,7 +198,7 @@ def main(cmdargs):
     tgt_norm_raster = run_radcal(tgt_masked_raster, ref_masked_raster, 
             out_rad_raster, out_mad_raster, tgt_raster, 
             band_pos1=(1,2,3,4), band_pos2=(1,2,3,4),
-            nochange_thresh=thresh_ncp, view_plots=False, 
+            nochange_thresh=thresh_ncp, view_plots=True, 
             save_invariant=True, save_residuals=True,
             datatype_out=tgt_dtype_code, 
             outdir=out_dir)

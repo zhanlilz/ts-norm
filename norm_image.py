@@ -209,6 +209,8 @@ def main(cmdargs):
                 +'_final.tif'))
     subprocess.run(['gdal_translate', 
         '-a_nodata', str(0), 
+        '-mo', 
+        'REFERENCE_IMAGE_SOURCE={0:s}'.format(os.path.basename(ref_raster)), 
         tgt_norm_raster, tgt_final_raster], check=True)
 
 if __name__ == '__main__':

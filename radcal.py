@@ -165,8 +165,8 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
             (os.path.splitext(os.path.basename(img1_name))[0]
                 +"_radcal_regression.png"))
         n_axes = len(pos1) if len(pos1) <= 10 else 10
-        fig = plt.figure(figsize=(6, 3*n_axes))
-        ax_arr = fig.subplots(n_axes, 1)
+        fig = plt.figure(figsize=(6, 3*n_axes), tight_layout=True)
+        ax_arr = fig.subplots(n_axes, 2)
 
     for i, (k, k2) in enumerate(zip(pos2, pos1)):
         x = inDataset1.GetRasterBand(k).ReadAsArray(x10,y10,cols,rows).astype(float).ravel()  # x=reference image
@@ -201,7 +201,7 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
         outBand.WriteArray(np.resize(a+b*y, (rows,cols)), 0, 0)
         outBand.FlushCache()
         if i < 10 and view_plots:
-            ax = ax_arr[i] 
+            ax = ax_arr[i, 0] 
             ymax = max(y[idx])
             xmax = max(x[idx])
             ax.plot(y[idx],x[idx],'k.',[0,ymax],[a,a+b*ymax],'k-')
@@ -209,28 +209,26 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
             ax.set_title('Band '+str(k))
             ax.set_xlabel('Target')
             ax.set_ylabel('Reference')
-            fig_text  = ('slope,int.,corr.:   ' 
-                    + '{0:.6f}, '.format(b) 
-                    + '{0:.6f}, '.format(a) 
-                    + '{0:.6f}, '.format(R) + '\n')
-            fig_text += ('means(tgt,ref,nrm): ' 
-                    + '{0:.6f}, '.format(mean_tgt) 
-                    + '{0:.6f}, '.format(mean_ref) 
-                    + '{0:.6f}, '.format(mean_nrm) + '\n')
-            fig_text += ('t-test, p-value:    ' 
-                    + '{0:.6f}, '.format(t_test[0]) 
-                    + '{0:.6f}, '.format(t_test[1]) + '\n')
-            fig_text += ('vars(tgt,ref,nrm):  ' 
-                    + '{0:.6f}, '.format(var_tgt) 
-                    + '{0:.6f}, '.format(var_ref) 
-                    + '{0:.6f}, '.format(var_nrm) + '\n')
-            fig_text += ('F-test, p-value:    ' 
-                    + '{0:.6f}, '.format(F_test[0]) 
-                    + '{0:.6f}, '.format(F_test[1]))
-            ax.text(1.05, 0.95, fig_text, va='top', transform=ax.transAxes)
+
+            ax = ax_arr[i, 1]
+            ax.set_axis_off()
+            fig_text  = ('slope = {0:.6f}\n'.format(b) 
+                    + 'intercept = {0:.6f}\n'.format(a) 
+                    + 'correlation = {0:.6f}\n'.format(R))
+            fig_text += ('means_tgt = {0:.6f}\n'.format(mean_tgt) 
+                    + 'means_ref = {0:.6f}\n'.format(mean_ref) 
+                    + 'means_nrm = {0:.6f}\n'.format(mean_nrm))
+            fig_text += ('t-test = {0:.6f}\n'.format(t_test[0]) 
+                    + 'p-value = {0:.6f}\n'.format(t_test[1]))
+            fig_text += ('vars_tgt = {0:.6f}\n'.format(var_tgt) 
+                    + 'vars_ref = {0:.6f}\n'.format(var_ref) 
+                    + 'vars_nrm = {0:.6f}\n'.format(var_nrm))
+            fig_text += ('F-test = {0:.6f}\n'.format(F_test[0]) 
+                    + 'p-value = {0:.6f}\n'.format(F_test[1]))
+            ax.text(0.0, 1.0, fig_text, va='top', ha='left', 
+                    transform=ax.transAxes)
 
     if view_plots:
-        fig.tight_layout()
         fig.savefig(fig_outpath, bbox_inches='tight', pad_inches=0.)
 
     # NL - save an image showing the invariant pixels

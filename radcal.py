@@ -129,6 +129,8 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
     chisqr = inDataset3.GetRasterBand(imadbands).ReadAsArray(x30,y30,cols,rows).ravel()  # chi2 band of iMAD image
     ncp = 1 - stats.chi2.cdf(chisqr, [imadbands-1])  # NL: no change probability. chi2 cdf w 'bands' degrees of freedom
     idx = np.where(ncp > ncpThresh)[0]  # NL: 1D array w indices of pixels above the no-change threshold
+    if len(idx) < 3:
+        raise RuntimeError('Too few ({0:d}) invariant points detected given no-change probability {1:.3f}'.format(len(idx), ncpThresh))
     idx = np.random.permutation(idx) # random permutation for random selection of training and testing
 #  split train/test in ratio 2:1 
     tmp = np.asarray(range(len(idx)))

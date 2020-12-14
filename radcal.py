@@ -179,6 +179,10 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
         t_test = stats.ttest_rel(x[tst], a+b*y[tst])
         var_tgt, var_ref, var_nrm = np.var(y[tst]), np.var(x[tst]), np.var(a+b*y[tst])
         F_test = fv_test(x[tst], a+b*y[tst])
+
+        # After training/testing split for t-test and F-test, we use all the
+        # invariant points to derive linear regression for normalization.
+        b, a, R = orthoregress(y, x)
         if save_residuals:
             # need to write out the predicted value and the residual at that value
             # need to do this for each band since the predicted value and residual will be different for each

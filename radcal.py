@@ -182,7 +182,7 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
 
         # After training/testing split for t-test and F-test, we use all the
         # invariant points to derive linear regression for normalization.
-        b, a, R = orthoregress(y, x)
+        b, a, R = orthoregress(y[idx], x[idx])
         if save_residuals:
             # need to write out the predicted value and the residual at that value
             # need to do this for each band since the predicted value and residual will be different for each

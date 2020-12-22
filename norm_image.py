@@ -33,6 +33,7 @@ def getCmdArgs():
             NDVI to mask out non-vegetation pixels in the normalization
             procedure.  Do not set this option if you do not like to mask out
             any non-vegetation. Default: None.''')
+    p.add_argument('-R', '--registration', dest='allow_reg', action='store_true')
     p.add_argument('-O', '--out_dir', dest='out_dir', metavar='OUT_DIR',
             default=None, required=True, help='''A directory to save output
             files.''')
@@ -74,6 +75,7 @@ def main(cmdargs):
     ref_raster = cmdargs.reference_raster
     thresh_ncp = cmdargs.thresh_ncp
     thresh_ndvi = cmdargs.thresh_ndvi
+    allow_reg = cmdargs.allow_reg
     out_dir = cmdargs.out_dir
 
     if not os.path.isdir(out_dir):
@@ -184,6 +186,20 @@ def main(cmdargs):
         '--calc', '(B==1)*A', 
         '--NoDataValue', str(0), '--type', ref_dtype_name, 
         '--outfile', ref_masked_raster], check=True)
+
+    if allow_reg:
+        tgt_reg_raster = os.path.join(out_dir, 
+                (os.path.splitext(os.path.basename(tgt_masked_raster))[0] 
+                    + '_coreg.tif'))
+        subprocess.run(['arosics_cli.py', 'local',
+            '-mp', '0', 
+            '-o', tgt_reg_raster, 
+            '-fmt_out', 'GTiff', 
+            '-nodata', '0', '0', 
+            '-br', '4', 
+            '-bs', '4', 
+            ref_masked_raster, tgt_masked_raster, '200'], check=True)
+        tgt_masked_raster = tgt_reg_raster
 
     # Now we have a target raster and a reference raster ready for run_MAD and
     # run_radcal, that is, same resolution, same dimension in aligned grids,

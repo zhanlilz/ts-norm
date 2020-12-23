@@ -115,10 +115,12 @@ def main(cmdargs):
             os.path.splitext(os.path.basename(tgt_raster))[0]+'_downsample.tif')
     ref_com_raster = os.path.join(out_dir, 
             os.path.splitext(os.path.basename(ref_raster))[0]+'_downsample.tif')
-    subprocess.run(['gdalwarp', '-tr', str(com_xres), str(com_yres), 
+    subprocess.run(['gdalwarp', '-r', 'average', 
+        '-tr', str(com_xres), str(com_yres), 
         '-dstnodata', str(0), 
         tgt_raster, tgt_com_raster], check=True)
-    subprocess.run(['gdalwarp', '-tr', str(com_xres), str(com_yres), 
+    subprocess.run(['gdalwarp', '-r', 'average', 
+        '-tr', str(com_xres), str(com_yres), 
         '-dstnodata', str(0), 
         ref_raster, ref_com_raster], check=True)
 
@@ -140,7 +142,8 @@ def main(cmdargs):
         '--allBands', 'A', '--NoDataValue', str(0), '--type', ref_dtype_name, 
         '--outfile', ref_clip_raster], 
         check=True)
-    subprocess.run(['gdalwarp', ref_com_raster, ref_clip_raster], check=True)
+    subprocess.run(['gdalwarp', '-r', 'average', 
+        ref_com_raster, ref_clip_raster], check=True)
 
     # Use NDVI to filter out non-veg. pixels
     if thresh_ndvi is not None:

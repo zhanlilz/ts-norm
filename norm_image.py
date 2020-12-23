@@ -191,13 +191,17 @@ def main(cmdargs):
         tgt_reg_raster = os.path.join(out_dir, 
                 (os.path.splitext(os.path.basename(tgt_masked_raster))[0] 
                     + '_coreg.tif'))
+        tiepoints_shp = os.path.join(out_dir, 
+                (os.path.splitext(os.path.basename(tgt_masked_raster))[0] 
+                    + '_coreg_tiepoints.shp'))
         subprocess.run(['arosics_cli.py', 'local',
             '-mp', '0', 
             '-o', tgt_reg_raster, 
             '-fmt_out', 'GTiff', 
             '-nodata', '0', '0', 
             '-br', '4', 
-            '-bs', '4', 
+            '-bs', '4',
+            '-tiepoint_grid', tiepoints_shp, 
             ref_masked_raster, tgt_masked_raster, '200'], check=True)
         tgt_masked_raster = tgt_reg_raster
 

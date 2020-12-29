@@ -208,8 +208,13 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
                 'var_tgt':var_tgt, 'var_ref':var_ref, 'var_nrm':var_nrm, 
                 'F_test':F_test}
         log.append(fit_info)
+
+        tgt_ndv = inDataset2.GetRasterBand(k2).GetNoDataValue()
+        out_arr = np.resize(a+b*y, (rows,cols))
+        if tgt_ndv is not None:
+            out_arr[np.resize(y, (rows,cols))==tgt_ndv] = tgt_ndv
         outBand = outDataset.GetRasterBand(i+1)
-        outBand.WriteArray(np.resize(a+b*y, (rows,cols)), 0, 0)
+        outBand.WriteArray(out_arr, 0, 0)
         outBand.FlushCache()
         if i < 10 and view_plots:
             ax = ax_arr[i, 0] 

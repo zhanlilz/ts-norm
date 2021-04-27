@@ -304,7 +304,11 @@ def run_radcal(image1, image2, outfile_name, iMAD_img, full_target_scene, band_p
             outBand = outDataset.GetRasterBand(j+1)
             for i in range(rows):
                 y = inBand.ReadAsArray(0,i,cols,1)
-                outBand.WriteArray(aa[j]+bb[j]*y,0,i)   # this is where the operations happen. Operates by row
+                tgt_ndv = inBand.GetNoDataValue()
+                out_arr = aa[j]+bb[j]*y
+                if tgt_ndv is not None:
+                    out_arr[y==tgt_ndv] = tgt_ndv
+                outBand.WriteArray(out_arr,0,i)   # this is where the operations happen. Operates by row
             outBand.FlushCache() 
             j += 1      
         outDataset = None    

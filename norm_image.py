@@ -34,6 +34,11 @@ def getCmdArgs():
             procedure.  Do not set this option if you do not like to mask out
             any non-vegetation. Default: None.''')
     p.add_argument('-R', '--registration', dest='allow_reg', action='store_true')
+    p.add_argument('--n_tiepoints', dest='n_tiepoints', metavar='TIEPOINT_COUNT', 
+        type=int, required=False, default=25, help='''Number of tie points used
+        in AROSICS. See
+        https://danschef.git-pages.gfz-potsdam.de/arosics/doc/cli_reference.html#local
+        for more details.''')
     p.add_argument('-O', '--out_dir', dest='out_dir', metavar='OUT_DIR',
             default=None, required=True, help='''A directory to save output
             files.''')
@@ -191,6 +196,15 @@ def main(cmdargs):
         '--outfile', ref_masked_raster], check=True)
 
     if allow_reg:
+        n_tiepoints = cmdargs.n_tiepoints
+        tiepoint_grid_dim = int(np.sqrt(n_tiepoints))+1
+
+        tgt_masked_ds = gdal.Open(tgt_masked_raster, gdal.GA_ReadOnly)
+        tiepoint_grid_res = min(tgt_masked_ds.RasterXSize / tiepoint_grid_dim, 
+            tgt_masked_ds.RasterYSize / tiepoint_grid_dim)
+        tiepoint_grid_res = int(tiepoint_grid_res) + 1 
+        tgt_masked_ds = None
+ 
         tgt_reg_raster = os.path.join(out_dir, 
                 (os.path.splitext(os.path.basename(tgt_masked_raster))[0] 
                     + '_coreg.tif'))
@@ -205,7 +219,10 @@ def main(cmdargs):
             '-br', '4', 
             '-bs', '4',
             '-tiepoint_grid', tiepoints_shp, 
-            ref_masked_raster, tgt_masked_raster, '200'], check=True)
+            ref_masked_raster, 
+            tgt_masked_raster, 
+            '{0:d}'.format(tiepoint_grid_res)], 
+            check=True)
         tgt_masked_raster = tgt_reg_raster
 
     # Now we have a target raster and a reference raster ready for run_MAD and
